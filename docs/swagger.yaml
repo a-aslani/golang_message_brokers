@@ -1,0 +1,48 @@
+definitions:
+  restapi.RegisterRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        type: string
+    type: object
+externalDocs:
+  description: OpenAPI
+  url: https://swagger.io/resources/open-api/
+host: localhost:8888
+info:
+  contact:
+    email: a.aslani.dev@gmail.com
+    name: API Support
+    url: https://github.com/a-aslani
+  description: API Documentation.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: https://github.com/a-aslani
+  title: Swagger Example API
+  version: "1.0"
+paths:
+  /v1/register:
+    post:
+      consumes:
+      - application/json
+      description: register new user
+      parameters:
+      - description: body params
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/restapi.RegisterRequest'
+      produces:
+      - application/json
+      responses: {}
+      summary: register new user
+      tags:
+      - RegisterUser
+swagger: "2.0"

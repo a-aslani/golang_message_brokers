@@ -1,0 +1,13 @@
+version: "3.9"
+
+test_mode: false
+jwt_secret_key: "bwrMY2iQTYBa3ZFIYH988RxP4G4fucvhXVQAxkxcJaAjooeQ6TG8XtWqK1IAgGUk"
+api_url: "http://localhost:8888"
+swagger_port: 6060
+
+servers:
+  user:
+    address: ":8000"
+    mongo_db:
+      uri: "mongodb://localhost:27017"
+      database: "message_brokers"
