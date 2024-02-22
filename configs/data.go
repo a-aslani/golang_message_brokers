@@ -9,18 +9,8 @@ type Config struct {
 }
 
 type Server struct {
-	Address    string     `mapstructure:"address,omitempty"`
-	PostgresDB PostgresDB `mapstructure:"postgres_db"`
-	MongoDB    MongoDB    `mapstructure:"mongo_db"`
-}
-
-type PostgresDB struct {
-	Host     string `mapstructure:"host"`
-	Port     int    `mapstructure:"port"`
-	Name     string `mapstructure:"name"`
-	User     string `mapstructure:"user"`
-	Password string `mapstructure:"password"`
-	SSLMode  string `mapstructure:"ssl_mode"`
+	Address string  `mapstructure:"address,omitempty"`
+	MongoDB MongoDB `mapstructure:"mongo_db"`
 }
 
 type MongoDB struct {

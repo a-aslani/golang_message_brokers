@@ -1,6 +1,8 @@
 module github.com/a-aslani/golang_message_brokers
 
-go 1.22.0
+go 1.21
+
+toolchain go1.22.0
 
 require (
 	github.com/a-aslani/golang_agency_clean_architecture v0.0.0-20240215131751-8c253cbc9120

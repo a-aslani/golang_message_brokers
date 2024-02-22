@@ -17,7 +17,7 @@
     },
     "host": "localhost:8888",
     "paths": {
-        "/v1/register": {
+        "/user/v1/register": {
             "post": {
                 "description": "register new user",
                 "consumes": [
@@ -48,6 +48,11 @@
     "definitions": {
         "restapi.RegisterRequest": {
             "type": "object",
+            "required": [
+                "email",
+                "last_name",
+                "password"
+            ],
             "properties": {
                 "email": {
                     "type": "string"
@@ -59,7 +64,8 @@
                     "type": "string"
                 },
                 "password": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 5
                 }
             }
         }

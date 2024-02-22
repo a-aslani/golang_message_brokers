@@ -9,5 +9,5 @@ servers:
   user:
     address: ":8000"
     mongo_db:
-      uri: "mongodb://localhost:27017"
+      uri: "mongodb://root:example@localhost:27017"
       database: "message_brokers"

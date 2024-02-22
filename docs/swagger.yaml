@@ -8,7 +8,12 @@ definitions:
       last_name:
         type: string
       password:
+        minLength: 5
         type: string
+    required:
+    - email
+    - last_name
+    - password
     type: object
 externalDocs:
   description: OpenAPI
@@ -27,7 +32,7 @@ info:
   title: Swagger Example API
   version: "1.0"
 paths:
-  /v1/register:
+  /user/v1/register:
     post:
       consumes:
       - application/json

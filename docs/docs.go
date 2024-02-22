@@ -24,7 +24,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/v1/register": {
+        "/user/v1/register": {
             "post": {
                 "description": "register new user",
                 "consumes": [
@@ -55,6 +55,11 @@ const docTemplate = `{
     "definitions": {
         "restapi.RegisterRequest": {
             "type": "object",
+            "required": [
+                "email",
+                "last_name",
+                "password"
+            ],
             "properties": {
                 "email": {
                     "type": "string"
@@ -66,7 +71,8 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "password": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 5
                 }
             }
         }
