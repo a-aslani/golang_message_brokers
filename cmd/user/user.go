@@ -9,7 +9,7 @@ import (
 	"github.com/a-aslani/golang_message_brokers/internal/pkg/password"
 	"github.com/a-aslani/golang_message_brokers/internal/pkg/token"
 	"github.com/a-aslani/golang_message_brokers/internal/user/endpoint/restapi"
-	"github.com/a-aslani/golang_message_brokers/internal/user/infrastructure/user_repository"
+	"github.com/a-aslani/golang_message_brokers/internal/user/infrastructure"
 	"github.com/a-aslani/golang_message_brokers/internal/user/service"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -32,22 +32,29 @@ func (user) Run(cfg *configs.Config) error {
 
 	log := logger.NewSimpleJSONLogger(appData)
 
-	jwtToken := token.NewJWTToken(cfg.JWTSecretKey)
-
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	client, err := connectToMongodb(ctx, cfg.Servers[appName].MongoDB.URI)
+	client, err := connectToMongodb(ctx, cfg.MongoDB.URI)
+	if err != nil {
+		return err
+	}
 	defer client.Disconnect(ctx)
+	db := client.Database(cfg.MongoDB.Database)
 
-	database := client.Database(cfg.Servers[appName].MongoDB.Database)
+	mongoRepo := infrastructure.NewMongoRepository(db, log)
 
-	mongoRepo := user_repository.NewMongoRepository(database, log)
+	userService := service.NewUserService(mongoRepo, password.BcryptHashing{})
+
+	jwt, err := token.NewHS256JWT(
+		ctx,
+		cfg,
+		time.Minute*time.Duration(20),
+		time.Minute*time.Duration(3),
+	)
 	if err != nil {
 		return err
 	}
 
-	userService := service.NewUserService(mongoRepo, password.BcryptHashing{})
-
-	primaryDriver := restapi.NewHandler(appData, log, jwtToken, cfg, userService)
+	primaryDriver := restapi.NewHandler(appData, log, jwt, cfg, userService)
 
 	primaryDriver.Start()
 

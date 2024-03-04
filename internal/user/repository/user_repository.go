@@ -8,4 +8,5 @@ import (
 type UserRepository interface {
 	InsertUser(ctx context.Context, user *entity.User) error
 	FindUserByEmail(ctx context.Context, email string) (*entity.User, error)
+	FindUserByID(ctx context.Context, id string) (*entity.User, error)
 }

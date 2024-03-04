@@ -1,4 +1,4 @@
-package user_repository
+package infrastructure
 
 import (
 	"context"
@@ -23,6 +23,20 @@ func NewMongoRepository(db *mongo.Database, log logger.Logger) *MongoRepository 
 	}
 }
 
+func (m MongoRepository) FindUserByID(ctx context.Context, id string) (*entity.User, error) {
+	m.log.Info(ctx, "call")
+
+	var user *entity.User
+
+	filter := bson.D{{"_id", id}}
+
+	if err := m.db.Collection("users").FindOne(ctx, filter).Decode(&user); err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
 func (m MongoRepository) InsertUser(ctx context.Context, user *entity.User) error {
 	m.log.Info(ctx, "call")
 
@@ -39,15 +53,7 @@ func (m MongoRepository) FindUserByEmail(ctx context.Context, email string) (*en
 
 	var user *entity.User
 
-	filter := bson.D{
-		{"$and",
-			bson.A{
-				bson.D{
-					{"email", bson.D{{"$gt", email}}},
-				},
-			},
-		},
-	}
+	filter := bson.D{{"email", email}}
 
 	if err := m.db.Collection("users").FindOne(ctx, filter).Decode(&user); err != nil {
 		return nil, err

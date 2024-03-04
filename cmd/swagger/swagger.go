@@ -33,6 +33,10 @@ func NewSwagger() framework.Runner {
 // Run
 // @externalDocs.description  OpenAPI
 // @externalDocs.url          https://swagger.io/resources/open-api/
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
 func (swagger) Run(cfg *configs.Config) error {
 	r := gin.Default()
 	r.GET("/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

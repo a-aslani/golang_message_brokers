@@ -5,9 +5,10 @@ jwt_secret_key: "bwrMY2iQTYBa3ZFIYH988RxP4G4fucvhXVQAxkxcJaAjooeQ6TG8XtWqK1IAgGU
 api_url: "http://localhost:8888"
 swagger_port: 6060
 
+mongodb:
+  uri: "mongodb://root:example@localhost:27017"
+  database: "message_brokers"
+
 servers:
   user:
     address: ":8000"
-    mongo_db:
-      uri: "mongodb://root:example@localhost:27017"
-      database: "message_brokers"

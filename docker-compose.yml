@@ -6,6 +6,7 @@ networks:
 
 volumes:
     mongodb_data:
+    redis_db:
 
 services:
 
@@ -50,6 +51,19 @@ services:
             ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
         networks:
             - app_network
+
+    redis:
+        image: redis
+        container_name: redis
+        hostname: redis
+        networks:
+            - app_network
+        volumes:
+            - redis_db:/data
+        ports:
+            - "6379:6379"
+        entrypoint: redis-server --appendonly yes
+        restart: always
 
     swagger:
         container_name: swagger

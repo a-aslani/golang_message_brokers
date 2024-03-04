@@ -1,4 +1,24 @@
 definitions:
+  restapi.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  restapi.RefreshTokenRequest:
+    properties:
+      csrf_secret:
+        type: string
+      refresh_token:
+        type: string
+    required:
+    - csrf_secret
+    - refresh_token
+    type: object
   restapi.RegisterRequest:
     properties:
       email:
@@ -32,6 +52,57 @@ info:
   title: Swagger Example API
   version: "1.0"
 paths:
+  /user/v1/info:
+    get:
+      consumes:
+      - application/json
+      description: get user information
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - Bearer: []
+      summary: get user information
+      tags:
+      - GetUserInfo
+  /user/v1/login:
+    post:
+      consumes:
+      - application/json
+      description: login user
+      parameters:
+      - description: body params
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/restapi.LoginRequest'
+      produces:
+      - application/json
+      responses: {}
+      summary: login user
+      tags:
+      - Login
+  /user/v1/refresh-token:
+    post:
+      consumes:
+      - application/json
+      description: refresh expired token
+      parameters:
+      - description: body params
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/restapi.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - Bearer: []
+      summary: refresh expired token
+      tags:
+      - RefreshToken
   /user/v1/register:
     post:
       consumes:
@@ -49,5 +120,11 @@ paths:
       responses: {}
       summary: register new user
       tags:
-      - RegisterUser
+      - Register
+securityDefinitions:
+  Bearer:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
