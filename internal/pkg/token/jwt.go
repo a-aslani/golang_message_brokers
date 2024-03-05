@@ -12,9 +12,7 @@ import (
 	"fmt"
 	"github.com/a-aslani/golang_message_brokers/configs"
 	"github.com/golang-jwt/jwt"
-	"github.com/redis/go-redis/v9"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -50,7 +48,14 @@ type JWTToken struct {
 	secretKey             string
 	refreshTokenValidTime time.Duration
 	accessTokenValidTime  time.Duration
-	rdb                   *redis.Client
+	repo                  Repository
+}
+
+type Repository interface {
+	StoreRefreshToken(ctx context.Context, sub, jti string) error
+	DeleteRefreshToken(ctx context.Context, jti string) error
+	FindRefreshToken(ctx context.Context, jti string) (sub string, err error)
+	FindAllRefreshTokens(ctx context.Context) ([]RefreshToken, error)
 }
 
 type JWT interface {
@@ -60,25 +65,14 @@ type JWT interface {
 	VerifyToken(token string) (*Claims, error)
 }
 
-func initDbClient(cfg *configs.Config) *redis.Client {
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     cfg.Redis.Address,
-		Password: cfg.Redis.Password,
-		DB:       0,
-	})
-	return rdb
-}
-
-func NewHS256JWT(ctx context.Context, cfg *configs.Config, refreshTokenValidTime time.Duration, accessTokenValidTime time.Duration) (JWT, error) {
-
-	rdb := initDbClient(cfg)
+func NewHS256JWT(ctx context.Context, cfg *configs.Config, repo Repository, refreshTokenValidTime time.Duration, accessTokenValidTime time.Duration) (JWT, error) {
 
 	jwtToken := &JWTToken{
 		algorithm:             jwt.SigningMethodHS256,
 		secretKey:             cfg.JWTSecretKey,
 		refreshTokenValidTime: refreshTokenValidTime,
 		accessTokenValidTime:  accessTokenValidTime,
-		rdb:                   rdb,
+		repo:                  repo,
 	}
 
 	err := jwtToken.initCachedRefreshTokens(ctx)
@@ -89,20 +83,18 @@ func NewHS256JWT(ctx context.Context, cfg *configs.Config, refreshTokenValidTime
 	return jwtToken, nil
 }
 
-func NewRS256JWT(ctx context.Context, cfg *configs.Config, fileName string, refreshTokenValidTime time.Duration, accessTokenValidTime time.Duration) (JWT, error) {
+func NewRS256JWT(ctx context.Context, fileName string, repo Repository, refreshTokenValidTime time.Duration, accessTokenValidTime time.Duration) (JWT, error) {
 
 	err := initRS256JWT(fileName)
 	if err != nil {
 		return nil, err
 	}
 
-	rdb := initDbClient(cfg)
-
 	jwtToken := &JWTToken{
 		algorithm:             jwt.SigningMethodRS256,
 		refreshTokenValidTime: refreshTokenValidTime,
 		accessTokenValidTime:  accessTokenValidTime,
-		rdb:                   rdb,
+		repo:                  repo,
 	}
 
 	err = jwtToken.initCachedRefreshTokens(ctx)
@@ -205,46 +197,19 @@ func generateRSAKeys(path string, fileName string) (err error) {
 }
 
 func (t *JWTToken) storeRefreshTokenToDatabase(ctx context.Context, sub, jti string) error {
-	return t.rdb.Set(ctx, fmt.Sprintf("%s:%s", TableName, jti), sub, 0).Err()
+	return t.repo.StoreRefreshToken(ctx, sub, jti)
 }
 
 func (t *JWTToken) deleteRefreshTokenFromDatabase(ctx context.Context, jti string) error {
-	return t.rdb.Del(ctx, fmt.Sprintf("%s:%s", TableName, jti)).Err()
+	return t.repo.DeleteRefreshToken(ctx, jti)
 }
 
 func (t *JWTToken) findRefreshTokenFromDatabase(ctx context.Context, jti string) (sub string, err error) {
-	sub, err = t.rdb.Get(ctx, fmt.Sprintf("%s:%s", TableName, jti)).Result()
-	if errors.Is(err, redis.Nil) {
-		err = ErrTokenAlreadyRefreshed
-		return
-	}
-	return
+	return t.repo.FindRefreshToken(ctx, jti)
 }
 
 func (t *JWTToken) findAllRefreshTokensFromDatabase(ctx context.Context) ([]RefreshToken, error) {
-
-	tokens := make([]RefreshToken, 0)
-
-	keys, err := t.rdb.Keys(ctx, fmt.Sprintf("%s:*", TableName)).Result()
-	if err != nil {
-		return tokens, err
-	}
-
-	for _, key := range keys {
-
-		sub, err := t.rdb.Get(ctx, key).Result()
-		if err != nil {
-			return tokens, err
-		}
-
-		jti := strings.Split(key, ":")[1]
-		tokens = append(tokens, RefreshToken{
-			Subject: sub,
-			JTI:     jti,
-		})
-	}
-
-	return tokens, nil
+	return t.repo.FindAllRefreshTokens(ctx)
 }
 
 func (t *JWTToken) initCachedRefreshTokens(ctx context.Context) (err error) {

@@ -44,9 +44,12 @@ func (user) Run(cfg *configs.Config) error {
 
 	userService := service.NewUserService(mongoRepo, password.BcryptHashing{})
 
+	tokenRepo := token.NewRedisRepository(cfg.Redis.Address, cfg.Redis.Password)
+
 	jwt, err := token.NewHS256JWT(
 		ctx,
 		cfg,
+		tokenRepo,
 		time.Minute*time.Duration(20),
 		time.Minute*time.Duration(3),
 	)
