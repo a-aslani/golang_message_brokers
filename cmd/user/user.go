@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/a-aslani/golang_message_brokers/configs"
 	"github.com/a-aslani/golang_message_brokers/internal/pkg/framework"
+	"github.com/a-aslani/golang_message_brokers/internal/pkg/framework/pubsub"
 	"github.com/a-aslani/golang_message_brokers/internal/pkg/logger"
 	"github.com/a-aslani/golang_message_brokers/internal/pkg/password"
 	"github.com/a-aslani/golang_message_brokers/internal/pkg/token"
@@ -42,7 +43,12 @@ func (user) Run(cfg *configs.Config) error {
 
 	mongoRepo := infrastructure.NewMongoRepository(db, log)
 
-	userService := service.NewUserService(mongoRepo, password.BcryptHashing{})
+	event, err := pubsub.NewEvent(appName, cfg.RabbitMQ.Username, cfg.RabbitMQ.Password, cfg.RabbitMQ.Host, cfg.RabbitMQ.Vhost)
+	if err != nil {
+		return err
+	}
+
+	userService := service.NewUserService(mongoRepo, password.BcryptHashing{}, event)
 
 	tokenRepo := token.NewRedisRepository(cfg.Redis.Address, cfg.Redis.Password)
 
@@ -53,6 +59,10 @@ func (user) Run(cfg *configs.Config) error {
 		time.Minute*time.Duration(20),
 		time.Minute*time.Duration(3),
 	)
+	if err != nil {
+		return err
+	}
+
 	if err != nil {
 		return err
 	}

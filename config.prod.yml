@@ -16,3 +16,9 @@ mongodb:
 servers:
   user:
     address: ":8000"
+
+rabbit_mq:
+  username: "guest"
+  password: "guest"
+  host: "localhost"
+  vhost: ""

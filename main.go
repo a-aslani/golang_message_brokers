@@ -29,7 +29,6 @@ func main() {
 		"swagger": swagger.NewSwagger(),
 		"user":    user.NewUser(),
 	}
-
 	flag.Parse()
 
 	app, exist := appMap[flag.Arg(0)]

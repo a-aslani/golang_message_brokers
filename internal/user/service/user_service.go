@@ -3,9 +3,11 @@ package service
 import (
 	"context"
 	"errors"
+	"github.com/a-aslani/golang_message_brokers/internal/pkg/framework/pubsub"
 	"github.com/a-aslani/golang_message_brokers/internal/pkg/password"
 	"github.com/a-aslani/golang_message_brokers/internal/user/entity"
 	"github.com/a-aslani/golang_message_brokers/internal/user/errorenum"
+	"github.com/a-aslani/golang_message_brokers/internal/user/event"
 	"github.com/a-aslani/golang_message_brokers/internal/user/repository"
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -14,12 +16,14 @@ import (
 type UserService struct {
 	repo   repository.UserRepository
 	hasher password.Hasher
+	event  *pubsub.Event
 }
 
-func NewUserService(repo repository.UserRepository, hasher password.Hasher) UserService {
+func NewUserService(repo repository.UserRepository, hasher password.Hasher, event *pubsub.Event) UserService {
 	return UserService{
 		repo:   repo,
 		hasher: hasher,
+		event:  event,
 	}
 }
 
@@ -63,14 +67,25 @@ func (s UserService) Register(ctx context.Context, dto RegisterDTO) error {
 		return err
 	}
 
-	err = s.repo.InsertUser(ctx, &entity.User{
+	u := &entity.User{
 		ID:        uuid.New().String(),
 		FirstName: dto.FirstName,
 		LastName:  dto.LastName,
 		Email:     dto.Email,
 		Password:  hashedPassword,
-	})
+	}
 
+	err = s.repo.InsertUser(ctx, u)
+	if err != nil {
+		return err
+	}
+
+	err = s.event.Publish(event.UserCreated, &event.UserCreatedData{
+		ID:        u.ID,
+		FirstName: u.FirstName,
+		LastName:  u.FirstName,
+		Email:     u.Email,
+	})
 	if err != nil {
 		return err
 	}
